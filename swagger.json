@@ -1,0 +1,204 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Authentication Service",
+    "description": "This service manages user authentication, including signup, signin, signout, profile access, and provides a basic root route message.",
+    "version": "1.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Development server"
+    }
+  ],
+  "paths": {
+    "/signup": {
+      "post": {
+        "summary": "User Signup",
+        "description": "Registers a new user and returns a token and JTI.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignupRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Signup successful. User registered and token generated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "SignUp successful"
+                    },
+                    "user": {
+                      "$ref": "#/components/schemas/UserResponse"
+                    },
+                    "jti": {
+                      "type": "string",
+                      "description": "JWT ID for the session"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request, e.g., user already exists."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/signin": {
+      "post": {
+        "summary": "User Signin",
+        "description": "Authenticates a user, invalidates any existing token, generates a new token, and returns the new JTI.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Signin successful. New token generated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "SignIn successful"
+                    },
+                    "user": {
+                      "$ref": "#/components/schemas/UserResponse"
+                    },
+                    "jti": {
+                      "type": "string",
+                      "description": "JWT ID for the new session"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid email or password."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/signout": {
+      "post": {
+        "summary": "User Signout",
+        "description": "Invalidates the user's current session token.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Signout successful.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "SignOut successful"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request, e.g., missing or invalid JTI."
+          },
+          "401": {
+            "description": "Unauthorized, user not signed in."
+          },
+          "500": {
+            "description": "Internal server error."
+          }
+        }
+      }
+    },
+    "/profile": {
+      "get": {
+        "summary": "Get User Profile",
+        "description": "Retrieves profile information for the logged-in user.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Profile information retrieved successfully."
+          },
+          "401": {
+            "description": "Authentication required."
+          },
+          "403": {
+            "description": "Session expired or invalid token."
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "SignupRequest": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string" }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": { "type": "string", "format": "email" },
+          "password": { "type": "string" }
+        }
+      },
+      "UserResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "email": { "type": "string", "format": "email" }
+        }
+      }
+    },
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+}
